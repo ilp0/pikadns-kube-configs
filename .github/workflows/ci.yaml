@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@v4
+      - name: lint (Ingress path)
+        run: |
+          helm lint . \
+            --set baseDomain=pika.example.com \
+            --set cloudflare.zoneId=example \
+            --set cloudflare.existingSecret=pikadns-cf \
+            --set ingress.host='*.pika.example.com'
+      - name: render Ingress path
+        run: |
+          helm template pikadns . \
+            --set baseDomain=pika.example.com \
+            --set cloudflare.zoneId=example \
+            --set cloudflare.existingSecret=pikadns-cf \
+            --set ingress.host='*.pika.example.com' > /dev/null
+      - name: render Traefik IngressRoute path
+        run: |
+          helm template pikadns . \
+            --set baseDomain=pika.example.com \
+            --set cloudflare.zoneId=example \
+            --set cloudflare.existingSecret=pikadns-cf \
+            --set ingress.enabled=false \
+            --set ingressRoute.enabled=true > /dev/null

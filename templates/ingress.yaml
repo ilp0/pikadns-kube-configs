@@ -1,0 +1,35 @@
+{{- if .Values.ingress.enabled }}
+{{- $host := required "ingress.host is required when ingress.enabled" .Values.ingress.host }}
+{{- $fullname := include "pikadns.fullname" . }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "pikadns.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ $host | quote }}
+      secretName: {{ required "ingress.tls.secretName is required when tls.enabled" .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullname }}
+                port:
+                  number: {{ .Values.service.port }}
+{{- end }}

@@ -1,0 +1,80 @@
+# -- pikadns configuration --------------------------------------------------
+
+# Base domain pikadns is authoritative for. Records are minted as
+# <name>.<ip>.<baseDomain>, e.g. app.10.0.0.1.pika.example.com
+# REQUIRED.
+baseDomain: ""
+
+# TTL (seconds) for the A records pikadns creates.
+recordTtl: 300
+
+cloudflare:
+  # Cloudflare zone ID of baseDomain. REQUIRED.
+  zoneId: ""
+
+  # Cloudflare API token with DNS:Edit on the zone. Provide ONE of:
+  #   apiToken       - inline; the chart creates a Secret for you (quick installs)
+  #   existingSecret - name of a Secret you created yourself (recommended)
+  apiToken: ""
+  existingSecret: ""
+  # Key within existingSecret that holds the token.
+  existingSecretKey: cf-api-token
+
+# -- workload ---------------------------------------------------------------
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/ilp0/pikadns
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    memory: 64Mi
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# -- networking -------------------------------------------------------------
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  # Ingress controller class. Leave "" for the cluster default, or set e.g.
+  # "traefik", "nginx" depending on your distro.
+  className: ""
+  annotations: {}
+  # The WILDCARD host that catches every <name>.<ip> request.
+  # REQUIRED when ingress.enabled. e.g. "*.pika.example.com"
+  #
+  # NOTE: a standard Ingress wildcard matches only ONE label, so it covers
+  # foo.pika.example.com but NOT app.10.0.0.1.pika.example.com. For the dotted
+  # multi-label hosts pikadns relies on, use `ingressRoute` (Traefik) below, or
+  # an equivalent regex/host rule for your controller.
+  host: ""
+  tls:
+    enabled: false
+    # Name of the TLS Secret (e.g. created by cert-manager). A wildcard
+    # certificate for *.<baseDomain> is required for HTTPS to work.
+    secretName: ""
+
+# Traefik IngressRoute (CRD). Preferred on Traefik because HostRegexp matches
+# multi-label hosts like app.10.0.0.1.<baseDomain>. Mutually exclusive with the
+# plain `ingress` above — disable that when you enable this.
+ingressRoute:
+  enabled: false
+  entryPoints: [web]
+  # Defaults to HostRegexp matching any subdomain of baseDomain.
+  match: ""
+  tls: {}

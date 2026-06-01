@@ -1,0 +1,9 @@
+apiVersion: v2
+name: pikadns
+description: On-the-fly wildcard DNS provisioner backed by the Cloudflare API
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/ilp0/pikadns
+sources:
+  - https://github.com/ilp0/pikadns

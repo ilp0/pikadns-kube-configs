@@ -1,0 +1,6 @@
+.git/
+.gitignore
+*.tmp
+*.bak
+my-values.yaml
+values.local.yaml

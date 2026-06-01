@@ -1,0 +1,21 @@
+pikadns is installed.
+
+Base domain : {{ .Values.baseDomain }}
+{{- if .Values.ingress.enabled }}
+Wildcard    : {{ .Values.ingress.host }}
+{{- end }}
+
+Before it works end to end, make sure:
+
+  1. A wildcard DNS record {{ if .Values.ingress.enabled }}{{ .Values.ingress.host }}{{ else }}*.{{ .Values.baseDomain }}{{ end }}
+     points at your ingress / load balancer IP.
+
+  2. The Cloudflare token has DNS:Edit on zone {{ .Values.cloudflare.zoneId }}.
+
+Try it:
+
+  curl -H 'Host: app.10.0.0.1.{{ .Values.baseDomain }}' \
+       http://<ingress-ip>/?json
+
+Then open http://app.10.0.0.1.{{ .Values.baseDomain }} in a browser — pikadns
+mints the A record and redirects you to the target IP.
